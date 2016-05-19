@@ -25,11 +25,17 @@
 
 
 
-package moldyn;
+package moldyn.Better;
+
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import jgfutil.*;
 
-public class md {
+public class md_Better {
 
 	public static final int ITERS = 100;
 	public static final double LENGTH = 50e-10;
@@ -63,36 +69,48 @@ public class md {
 
 		/* Create new arrays */
 
-		epot = new double [JGFMolDynBench.nthreads];
-		vir  = new double [JGFMolDynBench.nthreads];
-		ek   = new double [JGFMolDynBench.nthreads];
+		epot = new double [JGFMolDynBench_Better.nthreads];
+		vir  = new double [JGFMolDynBench_Better.nthreads];
+		ek   = new double [JGFMolDynBench_Better.nthreads];
 
-		interacts = new int [JGFMolDynBench.nthreads];
+		interacts = new int [JGFMolDynBench_Better.nthreads];
 
 		double sh_force [][] = new double[3][PARTSIZE];
-		double sh_force2 [][][] = new double[3][JGFMolDynBench.nthreads][PARTSIZE];
+		double sh_force2 [][][] = new double[3][JGFMolDynBench_Better.nthreads][PARTSIZE];
+
+		// Creación del pool de threads => Tamaño N - 1
+		ExecutorService threadsPool = null;
+		if (JGFMolDynBench_Better.nthreads > 1)
+			threadsPool = Executors.newFixedThreadPool(JGFMolDynBench_Better.nthreads - 1);
+
+		// CountDownLatch para verificar que todos hayan terminado
+		//stopSignal = new CountDownLatch (JGFMolDynBench_Better.nthreads);
+
+		// Barrera para los threads
+		CyclicBarrier barrier = new CyclicBarrier(JGFMolDynBench_Better.nthreads);
 
 		/* spawn threads */
 
-		Runnable thobjects[] = new Runnable [JGFMolDynBench.nthreads];
-		Thread th[] = new Thread [JGFMolDynBench.nthreads];
-		Barrier br= new TournamentBarrier(JGFMolDynBench.nthreads);
-
-		for(int i=1;i<JGFMolDynBench.nthreads;i++) {
-			thobjects[i] = new mdRunner(i,mm,sh_force,sh_force2,br);
-			th[i] = new Thread(thobjects[i]);
-			th[i].start();
+		for(int i=1;i<JGFMolDynBench_Better.nthreads;i++) {
+			// Ejecución de cada thread
+			threadsPool.execute(new mdRunner(i,mm,sh_force,sh_force2,barrier));
 		}
 
-		// Se re-utiliza el thread original para no crear uno extra
-		thobjects[0] = new mdRunner(0,mm,sh_force,sh_force2,br);
-		thobjects[0].run();
+		// Se re-utiliza el thread original para no tener que crear uno nuevo
 
-		for(int i=1;i<JGFMolDynBench.nthreads;i++) {
+		Runnable mainRunner = new mdRunner(0,mm,sh_force,sh_force2,barrier);
+		mainRunner.run();
+
+		// No acepto más procesamiento
+		if (JGFMolDynBench_Better.nthreads > 1){
+			threadsPool.shutdown();
+
+			// Se espera a que el executor termine todo el trabajo asignado
 			try {
-				th[i].join();
+				threadsPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);				
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			catch (InterruptedException e) {}
 		}
 
 	}
@@ -126,26 +144,26 @@ class mdRunner implements Runnable {
 	int iprint = 10;
 	int movemx = 50;
 
-	Barrier br;
+	CyclicBarrier barrier;
 	random randnum;
 
 	particle one [] = null;
 
-	public mdRunner(int id, int mm, double [][] sh_force, double [][][] sh_force2,Barrier br) {
+	public mdRunner(int id, int mm, double [][] sh_force, double [][][] sh_force2, CyclicBarrier barrier) {
 		this.id=id;
 		this.mm=mm;
 		this.sh_force=sh_force;
 		this.sh_force2=sh_force2;
-		this.br=br;
+		this.barrier = barrier;
 	} 
 
 	public void run() {
 
 		/* Parameter determination */
 
-		mdsize = md.PARTSIZE;
+		mdsize = md_Better.PARTSIZE;
 		one = new particle [mdsize];
-		l = md.LENGTH;
+		l = md_Better.LENGTH;
 
 		side = Math.pow((mdsize/den),0.3333333);
 		rcoff = mm/4.0;
@@ -268,14 +286,30 @@ class mdRunner implements Runnable {
 
 		}
 
-
 		/* Synchronise threads and start timer before MD simulation */
-
+		/*
 		br.DoBarrier(id);
 		if (id == 0) 
 			jgfutil.JGFInstrumentor.startTimer("Section3:MolDyn:Run");
 		br.DoBarrier(id);
+		 */
 
+		// Barrera
+		try {
+			barrier.await();
+		} catch (InterruptedException | BrokenBarrierException e) {
+			e.printStackTrace();
+		}
+
+		if (id == 0) 
+			jgfutil.JGFInstrumentor.startTimer("Section3:MolDyn:Run");
+
+		// Barrera
+		try {
+			barrier.await();
+		} catch (InterruptedException | BrokenBarrierException e) {
+			e.printStackTrace();
+		}
 
 		/* MD simulation */
 
@@ -288,8 +322,15 @@ class mdRunner implements Runnable {
 				one[i].domove(side,i);       
 			}
 
-			/* Barrier */
-			br.DoBarrier(id);
+			/* Barrier */			
+			//br.DoBarrier(id);
+
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 
 			if(id==0) {
 				for(j=0;j<3;j++) {
@@ -299,30 +340,42 @@ class mdRunner implements Runnable {
 				}
 			}
 
-			md.epot[id] = 0.0;
-			md.vir[id] = 0.0;
-			md.interacts[id] = 0;
+			md_Better.epot[id] = 0.0;
+			md_Better.vir[id] = 0.0;
+			md_Better.interacts[id] = 0;
 
 			/* Barrier */
-			br.DoBarrier(id);
+			//br.DoBarrier(id);
 
-
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 
 			/* compute forces */
 
-			for (i=0+id;i<mdsize;i+=JGFMolDynBench.nthreads) {
+			for (i=0+id;i<mdsize;i+=JGFMolDynBench_Better.nthreads) {
 				one[i].force(side,rcoff,mdsize,i,xx,yy,zz); 
 			}
 
 			/* Barrier */
-			br.DoBarrier(id);
+			//br.DoBarrier(id);
+
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 
 			/* update force arrays */
 
 			if(id == 0) {
 				for(int k=0;k<3;k++) {
 					for(i=0;i<mdsize;i++) {
-						for(j=0;j<JGFMolDynBench.nthreads;j++) {
+						for(j=0;j<JGFMolDynBench_Better.nthreads;j++) {
 							sh_force[k][i] += sh_force2[k][j][i];
 						}
 					}
@@ -332,7 +385,7 @@ class mdRunner implements Runnable {
 			if(id == 0) {
 				for(int k=0;k<3;k++) {
 					for(i=0;i<mdsize;i++) {
-						for(j=0;j<JGFMolDynBench.nthreads;j++) {
+						for(j=0;j<JGFMolDynBench_Better.nthreads;j++) {
 							sh_force2[k][j][i] = 0.0;
 						}
 					}
@@ -340,21 +393,28 @@ class mdRunner implements Runnable {
 			}
 
 			if(id==0) {
-				for(j=1;j<JGFMolDynBench.nthreads;j++) {
-					md.epot[0] += md.epot[j];
-					md.vir[0] += md.vir[j];
+				for(j=1;j<JGFMolDynBench_Better.nthreads;j++) {
+					md_Better.epot[0] += md_Better.epot[j];
+					md_Better.vir[0] += md_Better.vir[j];
 				}
-				for(j=1;j<JGFMolDynBench.nthreads;j++) {       
-					md.epot[j] = md.epot[0];
-					md.vir[j] = md.vir[0];
+				for(j=1;j<JGFMolDynBench_Better.nthreads;j++) {       
+					md_Better.epot[j] = md_Better.epot[0];
+					md_Better.vir[j] = md_Better.vir[0];
 				}
-				for(j=0;j<JGFMolDynBench.nthreads;j++) {
-					md.interactions += md.interacts[j]; 
+				for(j=0;j<JGFMolDynBench_Better.nthreads;j++) {
+					md_Better.interactions += md_Better.interacts[j]; 
 				}
 			}
 
 			/* Barrier */
-			br.DoBarrier(id);
+			//br.DoBarrier(id);
+
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 
 			if(id == 0) {
 				for (j=0;j<3;j++) {
@@ -367,7 +427,14 @@ class mdRunner implements Runnable {
 			sum = 0.0;
 
 			/* Barrier */
-			br.DoBarrier(id);
+			//br.DoBarrier(id);
+
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 
 			/*scale forces, update velocities */
 
@@ -403,21 +470,38 @@ class mdRunner implements Runnable {
 			/* sum to get full potential energy and virial */
 
 			if(((move+1) % iprint) == 0) {
-				md.ek[id] = 24.0*ekin;
-				md.epot[id] = 4.0*md.epot[id];
-				etot = md.ek[id] + md.epot[id];
+				md_Better.ek[id] = 24.0*ekin;
+				md_Better.epot[id] = 4.0*md_Better.epot[id];
+				etot = md_Better.ek[id] + md_Better.epot[id];
 				temp = tscale * ekin;
-				pres = den * 16.0 * (ekin - md.vir[id]) / mdsize;
+				pres = den * 16.0 * (ekin - md_Better.vir[id]) / mdsize;
 				vel = vel / mdsize; 
 				rp = (count / mdsize) * 100.0;
 			}
 
-			br.DoBarrier(id);
+			/* Barrier */
+			//br.DoBarrier(id);
+
+			// Barrera
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+			}
 		}
 
+		/* Barrier */
+		//br.DoBarrier(id);
 
-		br.DoBarrier(id);
-		if (id == 0) JGFInstrumentor.stopTimer("Section3:MolDyn:Run");
+		// Barrera
+		try {
+			barrier.await();
+		} catch (InterruptedException | BrokenBarrierException e) {
+			e.printStackTrace();
+		}
+
+		if (id == 0) 
+			JGFInstrumentor.stopTimer("Section3:MolDyn:Run");
 
 	}
 
@@ -509,9 +593,9 @@ class particle {
 				rrd4 = rrd2*rrd2;
 				rrd6 = rrd2*rrd4;
 				rrd7 = rrd6*rrd;
-				md.epot[id] = md.epot[id] + (rrd6 - rrd3);
+				md_Better.epot[id] = md_Better.epot[id] + (rrd6 - rrd3);
 				r148 = rrd7 - 0.5*rrd4;
-				md.vir[id] = md.vir[id] - rd*r148;
+				md_Better.vir[id] = md_Better.vir[id] - rd*r148;
 				forcex = xx * r148;
 				fxi = fxi + forcex;
 
@@ -527,7 +611,7 @@ class particle {
 
 				sh_force2[2][id][i] = sh_force2[2][id][i] - forcez;
 
-				md.interacts[id]++;
+				md_Better.interacts[id]++;
 			}
 
 		}

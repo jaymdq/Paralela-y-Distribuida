@@ -23,7 +23,6 @@
 package montecarlo;
 
 import java.util.*;
-import java.util.concurrent.Executor;
 import java.awt.*;
 
 /**
@@ -45,7 +44,7 @@ public class AppDemo extends Universal {
   // Class variables.
   //------------------------------------------------------------------------
 
-  public static double JGFavgExpectedReturnRateMC =0.0;
+    public static double JGFavgExpectedReturnRateMC =0.0;
   /**
     * A class variable.
     */
@@ -92,7 +91,9 @@ public class AppDemo extends Universal {
   public static Vector tasks;
   public static Vector results;
 
-  public AppDemo(String dataDirname, String dataFilename, int nTimeStepsMC, int nRunsMC) {
+  public AppDemo(  
+  String dataDirname, String dataFilename, int nTimeStepsMC, 
+  int nRunsMC) {
     this.dataDirname    = dataDirname;
     this.dataFilename   = dataFilename;
     this.nTimeStepsMC   = nTimeStepsMC;
@@ -134,7 +135,8 @@ public class AppDemo extends Universal {
       double volatility         = returnP.get_volatility();
       //
       // Now prepare for MC runs.
-      initAllTasks = new ToInitAllTasks(returnP, nTimeStepsMC, pathStartValue);
+      initAllTasks = new ToInitAllTasks(returnP, nTimeStepsMC, 
+      pathStartValue);
       String slaveClassName = "MonteCarlo.PriceStock";
       //
       // Now create the tasks.
@@ -147,27 +149,28 @@ public class AppDemo extends Universal {
   }
 
   public void runThread() {
-	results = new Vector(nRunsMC);
+    results = new Vector(nRunsMC);
 
-	Runnable thobjects[] = new Runnable [JGFMonteCarloBench.nthreads];
-	Thread th[] = new Thread [JGFMonteCarloBench.nthreads];
+       Runnable thobjects[] = new Runnable [JGFMonteCarloBench.nthreads];
+       Thread th[] = new Thread [JGFMonteCarloBench.nthreads];
 
-	for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        thobjects[i] = new AppDemoThread(i,nRunsMC);
-        th[i] = new Thread(thobjects[i]);
-        th[i].start();
-    }
-
-    thobjects[0] = new AppDemoThread(0,nRunsMC);
-    thobjects[0].run();
-
-
-    for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        try {
-            th[i].join();
+        for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
+            thobjects[i] = new AppDemoThread(i,nRunsMC);
+            th[i] = new Thread(thobjects[i]);
+            th[i].start();
         }
-        catch (InterruptedException e) {}
-    }      
+
+        // Brian - reutiliza este thread para no crear uno nuevo
+        thobjects[0] = new AppDemoThread(0,nRunsMC);
+        thobjects[0].run();
+
+
+        for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
+            try {
+                th[i].join();
+            }
+            catch (InterruptedException e) {}
+        }      
 
   }
 
@@ -363,7 +366,7 @@ class AppDemoThread implements Runnable {
 
     public void run() {
 
-        PriceStock ps;
+         PriceStock ps;
         // Now do the computation.
 
 
@@ -373,13 +376,14 @@ class AppDemoThread implements Runnable {
 
         ilow = id*slice;
         iupper = (id+1)*slice;
-        if (id==JGFMonteCarloBench.nthreads-1) iupper=nRunsMC;
+        if (id==JGFMonteCarloBench.nthreads-1) 
+        	iupper=nRunsMC;
 
         for( int iRun=ilow; iRun < iupper; iRun++ ) {
-		    ps = new PriceStock();
-		    ps.setInitAllTasks(AppDemo.initAllTasks);
-		    ps.setTask(AppDemo.tasks.elementAt(iRun));
-		    ps.run();
+        ps = new PriceStock();
+        ps.setInitAllTasks(AppDemo.initAllTasks);
+        ps.setTask(AppDemo.tasks.elementAt(iRun));
+        ps.run();
             AppDemo.results.addElement(ps.getResult());
         }
     }
