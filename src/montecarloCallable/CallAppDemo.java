@@ -21,7 +21,7 @@
 
 
 
-package montecarlo;
+package montecarloCallable;
 
 /**
   * Wrapper code to invoke the Application demonstrator.

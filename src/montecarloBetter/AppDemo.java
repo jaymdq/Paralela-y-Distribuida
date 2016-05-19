@@ -20,10 +20,15 @@
 **************************************************************************/
 
 
-package montecarlo;
+package montecarloBetter;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.awt.*;
 
 /**
@@ -149,26 +154,22 @@ public class AppDemo extends Universal {
   public void runThread() {
 	results = new Vector(nRunsMC);
 
+	ExecutorService pool = Executors.newFixedThreadPool(JGFMonteCarloBench.nthreads-1);
 	Runnable thobjects[] = new Runnable [JGFMonteCarloBench.nthreads];
-	Thread th[] = new Thread [JGFMonteCarloBench.nthreads];
-
-	for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        thobjects[i] = new AppDemoThread(i,nRunsMC);
-        th[i] = new Thread(thobjects[i]);
-        th[i].start();
-    }
-
-    thobjects[0] = new AppDemoThread(0,nRunsMC);
-    thobjects[0].run();
-
 
     for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        try {
-            th[i].join();
-        }
-        catch (InterruptedException e) {}
-    }      
-
+        AppDemoThread aux = new AppDemoThread(i,nRunsMC);
+        pool.execute(aux);
+    }
+       
+    thobjects[0] = new AppDemoThread(0,nRunsMC);
+    thobjects[0].run();
+    
+    pool.shutdown();
+    try {
+		pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+	} catch (InterruptedException e) {
+	}
   }
 
   public void processSerial() {

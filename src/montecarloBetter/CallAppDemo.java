@@ -21,7 +21,7 @@
 
 
 
-package montecarlo;
+package montecarloBetter;
 
 /**
   * Wrapper code to invoke the Application demonstrator.

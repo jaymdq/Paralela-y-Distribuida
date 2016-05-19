@@ -20,10 +20,16 @@
 **************************************************************************/
 
 
-package montecarlo;
+package montecarloCallable;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.awt.*;
 
 /**
@@ -149,25 +155,17 @@ public class AppDemo extends Universal {
   public void runThread() {
 	results = new Vector(nRunsMC);
 
-	Runnable thobjects[] = new Runnable [JGFMonteCarloBench.nthreads];
-	Thread th[] = new Thread [JGFMonteCarloBench.nthreads];
-
-	for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        thobjects[i] = new AppDemoThread(i,nRunsMC);
-        th[i] = new Thread(thobjects[i]);
-        th[i].start();
-    }
-
-    thobjects[0] = new AppDemoThread(0,nRunsMC);
-    thobjects[0].run();
-
-
-    for(int i=1;i<JGFMonteCarloBench.nthreads;i++) {
-        try {
-            th[i].join();
-        }
-        catch (InterruptedException e) {}
-    }      
+	ExecutorService pool = Executors.newFixedThreadPool(JGFMonteCarloBench.nthreads);
+	Collection<AppDemoThread<Object>> tasks = new Vector<AppDemoThread<Object>>();
+	
+    for(int i=0;i<JGFMonteCarloBench.nthreads;i++)
+        tasks.add(new AppDemoThread<Object>(i,nRunsMC));
+    
+    try {
+		pool.invokeAll(tasks);
+	} catch (InterruptedException e) {}
+    
+    pool.shutdown();
 
   }
 
@@ -350,7 +348,7 @@ public class AppDemo extends Universal {
 }
 
 
-class AppDemoThread implements Runnable {
+class AppDemoThread<V> implements Callable<V> {
 
     int id,nRunsMC;
 
@@ -363,9 +361,14 @@ class AppDemoThread implements Runnable {
 
     public void run() {
 
-        PriceStock ps;
-        // Now do the computation.
+       
+    }
 
+
+	@Override
+	public V call() throws Exception {
+		PriceStock ps;
+        // Now do the computation.
 
         int ilow, iupper, slice;
 
@@ -382,6 +385,7 @@ class AppDemoThread implements Runnable {
 		    ps.run();
             AppDemo.results.addElement(ps.getResult());
         }
-    }
+	    return null;
+	}
 }
 

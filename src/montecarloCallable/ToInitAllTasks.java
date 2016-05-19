@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarlo;
+package montecarloCallable;
 /**
   * Class for defining the initialisation data for all tasks.
   *

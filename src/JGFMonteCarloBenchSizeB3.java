@@ -9,10 +9,9 @@
 *                                at                                       *
 *                                                                         *
 *                Edinburgh Parallel Computing Centre                      *
-*                                                                         *
+*                                                                         * 
 *                email: epcc-javagrande@epcc.ed.ac.uk                     *
 *                                                                         *
-*      Original version of this code by Hon Yau (hwyau@epcc.ed.ac.uk)     *
 *                                                                         *
 *      This version copyright (c) The University of Edinburgh, 2001.      *
 *                         All rights reserved.                            *
@@ -20,37 +19,30 @@
 **************************************************************************/
 
 
+import montecarloCallable.*;
 
-package montecarlo;
+import jgfutil.*;
 
-/**
-  * Wrapper code to invoke the Application demonstrator.
-  *
-  * @author H W Yau
-  * @version $Revision: 1.19 $ $Date: 1999/02/16 19:10:02 $
-  */
-public class CallAppDemo {
-    public int size;
-    int datasizes[] = {10000,60000};
-    int input[] = new int[2];
-    AppDemo ap = null;
+public class JGFMonteCarloBenchSizeB3{ 
 
-    public void initialise () {
+  public static int nthreads;
 
-      input[0] = 1000;
-      input[1] = datasizes[size];
+  public static void main(String argv[]){
 
-      String dirName="Data";
-      String filename="hitData";
-      ap = new AppDemo(dirName, filename,(input[0]),(input[1]));
-      ap.initSerial();
-    }
+  if(argv.length != 0 ) {
+    nthreads = Integer.parseInt(argv[0]);
+  } else {
+	nthreads = 4;
+    System.out.println("The no of threads has not been specified, defaulting to " + nthreads);
+    System.out.println("  ");
+  }
 
-    public void runiters () {
-      ap.runThread();
-    }
-    public void presults () {
-      ap.processSerial();
-    }
+    JGFInstrumentor.printHeader(3,1,nthreads);
 
+    JGFMonteCarloBench mc = new JGFMonteCarloBench(nthreads); 
+    mc.JGFrun(1);
+ 
+  }
 }
+
+

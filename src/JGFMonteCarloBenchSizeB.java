@@ -32,9 +32,9 @@ public class JGFMonteCarloBenchSizeB{
   if(argv.length != 0 ) {
     nthreads = Integer.parseInt(argv[0]);
   } else {
-    System.out.println("The no of threads has not been specified, defaulting to 1");
+	nthreads = 4;
+    System.out.println("The no of threads has not been specified, defaulting to " + nthreads);
     System.out.println("  ");
-    nthreads = 1;
   }
 
     JGFInstrumentor.printHeader(3,1,nthreads);
