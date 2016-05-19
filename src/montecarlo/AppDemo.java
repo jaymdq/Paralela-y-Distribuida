@@ -160,6 +160,7 @@ public class AppDemo extends Universal {
             th[i].start();
         }
 
+        // Brian - reutiliza este thread para no crear uno nuevo
         thobjects[0] = new AppDemoThread(0,nRunsMC);
         thobjects[0].run();
 
@@ -375,7 +376,8 @@ class AppDemoThread implements Runnable {
 
         ilow = id*slice;
         iupper = (id+1)*slice;
-        if (id==JGFMonteCarloBench.nthreads-1) iupper=nRunsMC;
+        if (id==JGFMonteCarloBench.nthreads-1) 
+        	iupper=nRunsMC;
 
         for( int iRun=ilow; iRun < iupper; iRun++ ) {
         ps = new PriceStock();
