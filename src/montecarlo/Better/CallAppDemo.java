@@ -21,47 +21,36 @@
 
 
 
-package montecarloBetter;
+package montecarlo.Better;
 
 /**
-  * Error exception, for use by the Applications Demonstrator code.
-  * With optional field for selecting whether to print debug information
-  * via a stack trace.
+  * Wrapper code to invoke the Application demonstrator.
   *
   * @author H W Yau
-  * @version $Revision: 1.4 $ $Date: 1999/02/16 18:51:14 $
+  * @version $Revision: 1.19 $ $Date: 1999/02/16 19:10:02 $
   */
-public class DemoException extends java.lang.Exception {
-  /**
-    * Flag for selecting whether to print the stack-trace dump.
-    */
-  public static boolean DEBUG=true;
+public class CallAppDemo {
+    public int size;
+    int datasizes[] = {10000,60000};
+    int input[] = new int[2];
+    AppDemo ap = null;
 
-  /**
-    * Default constructor.
-    */
-  public DemoException() {
-    super();
-    if( DEBUG ) {
-      printStackTrace();
+    public void initialise () {
+
+      input[0] = 1000;
+      input[1] = datasizes[size];
+
+      String dirName="Data";
+      String filename="hitData";
+      ap = new AppDemo(dirName, filename,(input[0]),(input[1]));
+      ap.initSerial();
     }
-  }
-  /**
-    * Default constructor for reporting an error message.
-    */
-  public DemoException(String s) {
-    super(s);
-    if( DEBUG ) {
-      printStackTrace();
+
+    public void runiters () {
+      ap.runThread();
     }
-  }
-  /**
-    * Default constructor for reporting an error code.
-    */
-  public DemoException(int ierr) {
-    super(String.valueOf(ierr));
-    if( DEBUG ) {
-      printStackTrace();
+    public void presults () {
+      ap.processSerial();
     }
-  }
+
 }

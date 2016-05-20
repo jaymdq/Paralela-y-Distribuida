@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 /**
   * Utility methods, all static.
   *

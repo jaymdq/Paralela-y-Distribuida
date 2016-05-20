@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 /**
   * Class for defining the results of a task.  Currently, this is simply
   * the Monte Carlo generate rate path.

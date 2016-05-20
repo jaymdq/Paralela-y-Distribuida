@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 /**
   * Base class for all the security objects, namely in terms of
   * providing a consistent means of identifying each such object.

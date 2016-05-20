@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 /**
   * Class for defining the initialisation data for all tasks.
   *

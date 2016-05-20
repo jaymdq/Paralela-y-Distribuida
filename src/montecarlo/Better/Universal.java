@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 /**
   * Base class for all non-trivial classes.
   * Used as a centralised repository for all the functionalities which

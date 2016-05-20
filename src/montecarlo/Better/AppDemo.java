@@ -20,7 +20,7 @@
 **************************************************************************/
 
 
-package montecarloBetter;
+package montecarlo.Better;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;

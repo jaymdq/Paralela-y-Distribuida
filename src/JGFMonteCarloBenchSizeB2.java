@@ -19,9 +19,8 @@
 **************************************************************************/
 
 
-import montecarloBetter.*;
-
 import jgfutil.*;
+import montecarlo.Better.*;
 
 public class JGFMonteCarloBenchSizeB2{ 
 

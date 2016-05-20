@@ -1,6 +1,7 @@
-package moldyn.Better;
+package montecarlo.Better;
 
 import jgfutil.JGFInstrumentor;
+
 
 public class Main {
 
@@ -12,10 +13,12 @@ public class Main {
 		for (int i = 0; i < 5; i++){
 			System.out.println("No considerar");
 			String[] params = {"1"};
-			JGFMolDynBenchSizeB_Better.main(params);
+			JGFMonteCarloBenchSizeB3_Better.main(params);
 			// Se borran los timers
 			JGFInstrumentor.clearTimers();
 		}
+		
+		System.out.println("Si considerar");
 		
 		// Variación de cantidad de threads
 		for (int nthreads = 1; nthreads <= limiteSuperiorDeThreads; nthreads++){
@@ -26,7 +29,7 @@ public class Main {
 				System.out.println("Repetición: " + rep);
 				
 				String[] params = {""+nthreads};
-				JGFMolDynBenchSizeB_Better.main(params);				
+				JGFMonteCarloBenchSizeB3_Better.main(params);				
 				
 				// Se borran los timers
 				JGFInstrumentor.clearTimers();

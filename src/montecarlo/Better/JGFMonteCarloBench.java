@@ -19,7 +19,7 @@
 **************************************************************************/
 
 
-package montecarloBetter; 
+package montecarlo.Better; 
 
 import java.io.*;
 import jgfutil.*; 

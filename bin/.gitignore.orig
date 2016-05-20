@@ -1,0 +1,17 @@
+/JGFAllSizeB.class
+/JGFMolDynBenchSizeB.class
+/JGFMonteCarloBenchSizeB.class
+/JGFRayTracerBenchSizeB.class
+/jgfutil/
+/moldyn/
+/montecarlo/
+/raytracer/
+<<<<<<< HEAD
+/montecarloBetter/
+/JGFMonteCarloBenchSizeB2.class
+/montecarloCallable/
+/JGFMonteCarloBenchSizeB3.class
+=======
+/moldynMejorado/
+/moldyn_Better/
+>>>>>>> refs/remotes/origin/brian

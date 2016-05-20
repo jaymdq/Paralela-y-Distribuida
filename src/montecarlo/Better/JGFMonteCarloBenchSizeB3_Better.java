@@ -1,3 +1,4 @@
+package montecarlo.Better;
 /**************************************************************************
 *                                                                         *
 *         Java Grande Forum Benchmark Suite - Thread Version 1.0          *
@@ -22,8 +23,9 @@
 import montecarloCallable.*;
 
 import jgfutil.*;
+import montecarlo.JGFMonteCarloBench;
 
-public class JGFMonteCarloBenchSizeB3{ 
+public class JGFMonteCarloBenchSizeB3_Better{ 
 
   public static int nthreads;
 

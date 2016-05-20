@@ -28,6 +28,7 @@
 package moldyn.Better;
 
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -84,8 +85,8 @@ public class md_Better {
 			threadsPool = Executors.newFixedThreadPool(JGFMolDynBench_Better.nthreads - 1);
 
 		// CountDownLatch para verificar que todos hayan terminado
-		//stopSignal = new CountDownLatch (JGFMolDynBench_Better.nthreads);
-
+		//CountDownLatch stopSignal = new CountDownLatch (JGFMolDynBench_Better.nthreads);
+		
 		// Barrera para los threads
 		CyclicBarrier barrier = new CyclicBarrier(JGFMolDynBench_Better.nthreads);
 
